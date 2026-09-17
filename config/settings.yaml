@@ -1,0 +1,63 @@
+# Retail Analytics Configuration Settings
+
+project:
+  name: "Retail Basket Markdown Intelligence"
+  version: "1.0.0"
+
+inventory:
+  abc_classification:
+    a_tier_quantile: 0.70   # Top 70% of revenue contribution
+    b_tier_quantile: 0.90   # Next 20% of revenue contribution
+    c_tier_quantile: 1.00   # Remaining 10% (Slow movers)
+  gmroi:
+    benchmark_target: 2.50  # Target GMROI ratio ($2.50 gross margin per $1.00 inventory investment)
+    warning_threshold: 1.20 # GMROI below 1.20 triggers markdown alert
+
+apriori:
+  min_support: 0.005       # Minimum itemset support threshold
+  min_confidence: 0.15     # Minimum rule confidence threshold
+  min_lift: 1.20           # Minimum rule lift threshold
+
+sentiment:
+  vader:
+    negative_threshold: -0.05
+    positive_threshold: 0.05
+  issue_categories:
+    sizing_fit:
+      - "small"
+      - "large"
+      - "fit"
+      - "tight"
+      - "loose"
+      - "size"
+      - "sizing"
+      - "short"
+      - "long"
+      - "sleeve"
+      - "waist"
+    price_value:
+      - "expensive"
+      - "overpriced"
+      - "price"
+      - "cost"
+      - "worth"
+      - "money"
+      - "cheap"
+    quality_material:
+      - "quality"
+      - "fabric"
+      - "material"
+      - "thin"
+      - "ripped"
+      - "tear"
+      - "color"
+      - "washed"
+      - "shrink"
+      - "rough"
+
+bundling:
+  markdown_tiers:
+    mild_clearance: 0.15   # 15% bundle discount
+    moderate_clearance: 0.25 # 25% bundle discount
+    aggressive_clearance: 0.35 # 35% bundle discount
+  holding_cost_rate_annual: 0.25 # 25% annual holding cost rate

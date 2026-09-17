@@ -1,0 +1,18 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Data files (Exclude large raw dataset CSVs from Git repo)
+data/raw/online_retail.csv
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Environment / Streamlit local cache
+.venv/
+env/
+venv/
+.streamlit/
