@@ -1,16 +1,12 @@
-# Market Basket Sentiment Clearance Optimizer 🛍️📈
+# Market Basket Sentiment Clearance Optimizer
 
 > **Supply Chain Analytics, Market Basket Association Rules (Apriori), 3-Step NLP Review Diagnostics, and Gross Margin Recovery (GMROI)**
-
-![Python Version](https://img.shields.io/badge/Python-3.11%2B-blue)
-![Framework](https://img.shields.io/badge/Framework-Streamlit%20%7C%20Apriori%20%7C%20VADER%20%7C%20TF--IDF-orange)
-![License](https://img.shields.io/badge/License-MIT-green)
 
 Inspired by retail operations (Zara, Amazon, H&M), this platform prevents margin destruction caused by flat 50%+ end-of-season clearance markdowns. By combining **Pareto ABC Inventory Classification**, **Gross Margin Return on Inventory (GMROI)**, **3-Step NLP Review Diagnostics (VADER + TF-IDF N-grams)**, and **Apriori Market Basket Association Rules**, the engine pairs slow-moving stock with high-demand anchor products to maximize gross margin dollars.
 
 ---
 
-## 📊 Data Provenance & Financial Modeling Disclosure
+## Data Provenance & Financial Modeling Disclosure
 
 To ensure complete transparency during technical review:
 
@@ -25,7 +21,7 @@ Public transaction logs contain retail selling prices and quantities, but omit w
 
 ---
 
-## 🔬 3-Step NLP Analytical Diagnostics Workflow
+## 3-Step NLP Analytical Diagnostics Workflow
 
 To connect unstructured customer feedback directly with merchandising actions, the project implements a structured 3-step NLP analytical pipeline running on 23,486 real Kaggle customer reviews:
 
@@ -54,7 +50,7 @@ To connect unstructured customer feedback directly with merchandising actions, t
 
 ---
 
-## 🎯 Business Problem & Solution Architecture
+## Business Problem & Solution Architecture
 
 ### The Retail Dilemma
 Retailers accumulate stagnant, slow-moving C-Class inventory at season end. Standard operations slash prices by 50–70%, eroding gross margins below unit cost while ignoring the root cause of stagnation.
@@ -103,7 +99,7 @@ Retailers accumulate stagnant, slow-moving C-Class inventory at season end. Stan
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 retail-basket-markdown-intelligence/
@@ -131,7 +127,7 @@ retail-basket-markdown-intelligence/
 
 ---
 
-## 🚀 Quick Start Guide
+## Quick Start Guide
 
 ### 1. Clone & Install Dependencies
 ```bash
@@ -158,5 +154,14 @@ python3 reports/generate_deck.py
 
 ---
 
-## 📜 License
-Licensed under the [MIT License](LICENSE).
+## Tools and Libraries Used
+
+* **Python 3.11+**: https://www.python.org/
+* **Streamlit**: https://streamlit.io/
+* **mlxtend (Apriori Algorithm)**: https://rasbt.github.io/mlxtend/
+* **vaderSentiment**: https://github.com/cjhutto/vaderSentiment
+* **scikit-learn (TF-IDF Vectorizer)**: https://scikit-learn.org/
+* **pandas**: https://pandas.pydata.org/
+* **numpy**: https://numpy.org/
+* **Plotly**: https://plotly.com/python/
+* **python-pptx**: https://python-pptx.readthedocs.io/

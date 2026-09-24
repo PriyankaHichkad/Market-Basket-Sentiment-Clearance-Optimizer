@@ -20,7 +20,6 @@ from src.dynamic_bundling_engine import DynamicBundlingEngine
 # -------------------------------------------------------------
 st.set_page_config(
     page_title="Market Basket & Sentiment Clearance Control Tower",
-    page_icon="🛒",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -77,7 +76,7 @@ st.markdown("""
 # Header Banner
 st.markdown("""
 <div class="hero-container">
-    <div class="hero-title">🛒 Market Basket & Sentiment Clearance Control Tower</div>
+    <div class="hero-title">Market Basket & Sentiment Clearance Control Tower</div>
     <div class="hero-subtitle">Enterprise Executive Dashboard | Preserving Gross Margin (GMROI) via Apriori Bundling & 3-Step NLP Review Diagnostics</div>
 </div>
 """, unsafe_allow_html=True)
@@ -137,7 +136,7 @@ if sku_df is None or sku_df.empty:
 # -------------------------------------------------------------
 # SIDEBAR CONTROLS & CONTROLS
 # -------------------------------------------------------------
-st.sidebar.markdown("### ⚙️ Executive Control Panel")
+st.sidebar.markdown("### Executive Control Panel")
 st.sidebar.markdown("Filter portfolio scope and run real-time clearance margin simulations.")
 
 abc_filter = st.sidebar.multiselect(
@@ -215,10 +214,10 @@ st.markdown("<br>", unsafe_allow_html=True)
 # NAVIGATION TABS
 # -------------------------------------------------------------
 tab1, tab2, tab3, tab4 = st.tabs([
-    "📊 Portfolio Health & GMROI Matrix",
-    "💬 Customer Sentiment & Diagnostic Insights",
-    "🏷️ Smart Clearance & Bundle Simulator",
-    "📋 Strategic Recommendations & BI Guide"
+    "Portfolio Health & GMROI Matrix",
+    "Customer Sentiment & Diagnostic Insights",
+    "Smart Clearance & Bundle Simulator",
+    "Strategic Recommendations & BI Guide"
 ])
 
 # -------------------------------------------------------------
@@ -290,7 +289,7 @@ with tab1:
 # TAB 2: CUSTOMER SENTIMENT & DIAGNOSTIC INSIGHTS
 # -------------------------------------------------------------
 with tab2:
-    st.markdown("### 💬 3-Step NLP Customer Sentiment Diagnostics")
+    st.markdown("### 3-Step NLP Customer Sentiment Diagnostics")
     st.markdown("Uncovering why products are slow-moving by extracting customer feedback signals and categorizing operational root causes.")
     
     col_step1, col_step2 = st.columns(2)
@@ -346,19 +345,19 @@ with tab2:
     with m1:
         st.markdown("""
         **1. Sizing & Fit Flaws** (*"runs small", "tight sleeves"*)
-        * **Action**: ❌ **STOP Price Discounts**
+        * **Action**: **STOP Price Discounts**
         * **Rationale**: Slashes won't fix high return rates; initiate fit pattern correction.
         """)
     with m2:
         st.markdown("""
         **2. Price Resistance** (*"overpriced for quality"*)
-        * **Action**: ✅ **APPROVE Smart Bundle**
+        * **Action**: **APPROVE Smart Bundle**
         * **Rationale**: Customer values item at lower price point; pair with high-margin Anchor.
         """)
     with m3:
         st.markdown("""
         **3. Quality & Material Defects** (*"cheap fabric", "ripped"*)
-        * **Action**: ⚠️ **VENDOR RETURN (RTV)**
+        * **Action**: **VENDOR RETURN (RTV)**
         * **Rationale**: Do not bundle defective stock; claim vendor credit.
         """)
 
@@ -376,7 +375,7 @@ with tab2:
 # TAB 3: SMART CLEARANCE & BUNDLE SIMULATOR
 # -------------------------------------------------------------
 with tab3:
-    st.markdown("### 🏷️ Market Basket Co-Purchasing Rules (Apriori Mining)")
+    st.markdown("### Market Basket Co-Purchasing Rules (Apriori Mining)")
     st.markdown("Identified product association rules pairing high-demand **Anchor SKUs (A-Class)** with stagnant **Slow-Movers (C-Class)**.")
     
     if bundles_df is not None and not bundles_df.empty:
@@ -401,7 +400,7 @@ with tab3:
         )
         
         st.markdown("---")
-        st.markdown("### ⚡ Live Bundle Margin Recovery Simulator")
+        st.markdown("### Live Bundle Margin Recovery Simulator")
         st.markdown("Interactively test the financial impact of creating a smart bundle vs. a standalone 50% clearance slash.")
         
         sim_c1, sim_c2 = st.columns(2)
@@ -447,7 +446,7 @@ with tab3:
 # TAB 4: STRATEGIC RECOMMENDATIONS & BI GUIDE
 # -------------------------------------------------------------
 with tab4:
-    st.markdown("### 📋 Executive Action Plan & Roadmap")
+    st.markdown("### Executive Action Plan & Roadmap")
     st.markdown("""
     #### 4-Phase Operational Execution Strategy
     1. **Phase 1: Automated ERP Alerts (Day 45)**: Trigger warning alerts in inventory systems when an SKU reaches 45+ Days in Inventory with GMROI < 1.20x.
@@ -457,7 +456,7 @@ with tab4:
     """)
     
     st.markdown("---")
-    st.markdown("### 📊 Enterprise BI Integration (Power BI & Tableau Specs)")
+    st.markdown("### Enterprise BI Integration (Power BI & Tableau Specs)")
     st.markdown("Ready-to-copy calculated fields for integration into corporate business intelligence dashboards:")
     
     st.code("""
@@ -478,4 +477,4 @@ IF(CumPercent <= 0.70, "A (High Velocity)",
     """, language="sql")
 
 st.sidebar.markdown("---")
-st.sidebar.caption("🛒 **Market Basket & Sentiment Clearance Control Tower**")
+st.sidebar.caption("**Market Basket & Sentiment Clearance Control Tower**")
