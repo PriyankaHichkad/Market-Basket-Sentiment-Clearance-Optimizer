@@ -90,6 +90,13 @@ def load_enterprise_data():
     project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     raw_dir = os.path.join(project_dir, "data", "raw")
     
+    # Self-healing: Auto-download raw datasets on fresh clone if missing
+    try:
+        from scripts.download_data import ensure_datasets_exist
+        ensure_datasets_exist(raw_dir)
+    except Exception as dl_err:
+        print(f"Dataset download check info: {dl_err}")
+        
     etl = ETLPipeline(raw_dir)
     try:
         r_df, rev_df = etl.load_raw_data()

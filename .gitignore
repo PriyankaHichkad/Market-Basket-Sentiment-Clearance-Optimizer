@@ -3,8 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Data files (Exclude large raw dataset CSVs from Git repo)
-data/raw/online_retail.csv
+# Data files (Exclude large raw dataset CSVs from Git repo; fetched automatically by scripts/download_data.py)
+data/raw/*.csv
 
 # macOS system files
 .DS_Store
