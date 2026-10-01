@@ -15,4 +15,7 @@ data/raw/*.csv
 .venv/
 env/
 venv/
-.streamlit/
+.streamlit/*
+!.streamlit/config.toml
+
+

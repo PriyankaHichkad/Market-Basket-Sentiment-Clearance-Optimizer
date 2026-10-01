@@ -61,7 +61,7 @@ class ETLPipeline:
         
         # Parse dates
         if 'InvoiceDate' in df.columns:
-            df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'])
+            df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'], format='mixed', errors='coerce')
             
         print(f"Cleaned Online Retail: {len(df):,} valid line items")
         return df
