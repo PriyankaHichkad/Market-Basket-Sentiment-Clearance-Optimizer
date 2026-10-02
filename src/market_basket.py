@@ -78,7 +78,6 @@ class MarketBasketAnalyzer:
                 class_a = abc_map.get(item_a, 'Unknown')
                 class_b = abc_map.get(item_b, 'Unknown')
                 
-                # Identify pairs containing 1 Anchor (A/B) and 1 Slow-Mover (C)
                 is_bundle_pair = (
                     (class_a.startswith(('A', 'B')) and class_b.startswith('C')) or
                     (class_b.startswith(('A', 'B')) and class_a.startswith('C'))

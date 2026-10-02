@@ -102,7 +102,11 @@ def load_enterprise_data():
         step3_sku_sentiment = sd.step3_aggregate_business_insights(step1_reviews)
         
         mba = MarketBasketAnalyzer(min_support=0.005, min_confidence=0.05, min_lift=1.05)
-        b_matrix = mba.prepare_basket_matrix(clean_retail, sku_analytics_df=sku_fin, max_items=100)
+        try:
+            b_matrix = mba.prepare_basket_matrix(clean_retail, sku_analytics_df=sku_fin, max_items=100)
+        except TypeError:
+            b_matrix = mba.prepare_basket_matrix(clean_retail, max_items=100)
+            
         freq_items = mba.run_apriori(b_matrix)
         rules = mba.generate_association_rules(freq_items)
         bundles = mba.find_bundle_recommendations(rules, sku_fin)
