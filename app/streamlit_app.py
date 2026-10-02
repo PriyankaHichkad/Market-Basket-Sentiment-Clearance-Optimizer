@@ -24,62 +24,48 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Enterprise CSS Styling
+# Custom Clean CSS Styling
 st.markdown("""
 <style>
-    /* Main Layout Styling */
-    .stApp { background-color: #FAFAFA; }
+    .stApp { background-color: #FFFFFF; }
     
-    /* Header Styling */
-    .hero-container {
-        background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
-        padding: 24px 32px;
-        border-radius: 12px;
-        color: #FFFFFF;
-        margin-bottom: 24px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-    .hero-title { font-size: 28px; font-weight: 800; color: #FFFFFF; margin: 0; letter-spacing: -0.5px; }
-    .hero-subtitle { font-size: 15px; color: #93C5FD; margin-top: 6px; font-weight: 400; }
-    
-    /* KPI Metric Cards */
-    .kpi-card {
-        background-color: #FFFFFF;
-        border-radius: 10px;
-        padding: 18px 20px;
+    /* Clean Metric Card Styling */
+    .metric-card {
+        background-color: #F8FAFC;
         border: 1px solid #E2E8F0;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 12px;
     }
-    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    .kpi-label { font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; }
-    .kpi-value { font-size: 26px; font-weight: 800; color: #0F172A; margin-top: 4px; }
-    .kpi-subtext { font-size: 12px; color: #10B981; margin-top: 4px; font-weight: 600; }
-    .kpi-alert { color: #EF4444 !important; }
+    .metric-label { font-size: 13px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; }
+    .metric-value { font-size: 26px; font-weight: 700; color: #0F172A; margin-top: 4px; }
+    .metric-sub { font-size: 12px; color: #059669; font-weight: 500; margin-top: 2px; }
+    .metric-alert { color: #DC2626 !important; }
     
     /* Section Cards */
-    .content-card {
+    .content-box {
         background-color: #FFFFFF;
-        border-radius: 10px;
-        padding: 20px;
         border: 1px solid #E2E8F0;
+        border-radius: 8px;
+        padding: 20px;
         margin-bottom: 20px;
     }
-    
-    /* Executive Badges */
-    .badge-a { background-color: #D1FAE5; color: #065F46; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 12px; }
-    .badge-b { background-color: #DBEAFE; color: #1E40AF; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 12px; }
-    .badge-c { background-color: #FEE2E2; color: #991B1B; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 12px; }
 </style>
 """, unsafe_allow_html=True)
 
-# Header Banner
-st.markdown("""
-<div class="hero-container">
-    <div class="hero-title">Market Basket & Sentiment Clearance Control Tower</div>
-    <div class="hero-subtitle">Enterprise Executive Dashboard | Preserving Gross Margin (GMROI) via Apriori Bundling & 3-Step NLP Review Diagnostics</div>
-</div>
-""", unsafe_allow_html=True)
+# -------------------------------------------------------------
+# SIMPLE & PROFESSIONAL HEADER (NO BLUE BOX)
+# -------------------------------------------------------------
+st.title("Market Basket & Sentiment Clearance Control Tower")
+st.markdown("**Enterprise Supply Chain Analytics** | Preserving Gross Margin (GMROI) via Apriori Association Rules & 3-Step NLP Review Diagnostics")
+st.divider()
+
+# Quick Executive Briefing Box
+st.info(
+    "**Executive Briefing**: This control tower prevents margin loss caused by flat 50%+ end-of-season clearance markdowns. "
+    "By combining **Pareto ABC Inventory Classification**, **GMROI Financial Metrics**, **3-Step NLP Review Diagnostics**, and **Apriori Association Rules**, "
+    "the system pairs slow-moving inventory (C-Class) with high-demand anchor products (A-Class) at a 15-20% bundle discount."
+)
 
 # -------------------------------------------------------------
 # DATA LOADING & ANALYTICS PIPELINE
@@ -89,7 +75,6 @@ def load_enterprise_data():
     project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     raw_dir = os.path.join(project_dir, "data", "raw")
     
-    # Self-healing: Auto-download raw datasets on fresh clone if missing
     try:
         from scripts.download_data import ensure_datasets_exist
         ensure_datasets_exist(raw_dir)
@@ -107,18 +92,15 @@ def load_enterprise_data():
         return None, None, None, None, None
         
     try:
-        # Financial Analytics (ABC Pareto & GMROI Ratio)
         ifa = InventoryFinanceAnalytics()
         sku_abc = ifa.calculate_abc_classification(sku_df)
         sku_fin = ifa.calculate_gmroi(sku_abc)
         
-        # 3-Step NLP Sentiment Diagnostics Workflow
         sd = SentimentDiagnostics()
         step1_reviews = sd.step1_vader_preprocessing(clean_reviews)
         step2_ngrams = sd.step2_tfidf_ngram_extraction(step1_reviews)
         step3_sku_sentiment = sd.step3_aggregate_business_insights(step1_reviews)
         
-        # Market Basket Co-Purchasing Engine (Apriori)
         mba = MarketBasketAnalyzer(min_support=0.005, min_confidence=0.05, min_lift=1.05)
         b_matrix = mba.prepare_basket_matrix(clean_retail, sku_analytics_df=sku_fin, max_items=100)
         freq_items = mba.run_apriori(b_matrix)
@@ -131,8 +113,7 @@ def load_enterprise_data():
         st.exception(err)
         return None, None, None, None, None
 
-
-with st.spinner("Initializing Enterprise Data Pipeline & Running Analytics Engine..."):
+with st.spinner("Loading Enterprise Analytics Pipeline..."):
     sku_df, reviews_df, ngrams_df, sku_sentiment_df, bundles_df = load_enterprise_data()
 
 if sku_df is None or sku_df.empty:
@@ -140,13 +121,13 @@ if sku_df is None or sku_df.empty:
     st.stop()
 
 # -------------------------------------------------------------
-# SIDEBAR CONTROLS & CONTROLS
+# SIDEBAR CONTROLS
 # -------------------------------------------------------------
-st.sidebar.markdown("### Executive Control Panel")
-st.sidebar.markdown("Filter portfolio scope and run real-time clearance margin simulations.")
+st.sidebar.markdown("### Control Panel")
+st.sidebar.markdown("Filter portfolio scope and adjust bundle discounts.")
 
 abc_filter = st.sidebar.multiselect(
-    "Inventory Velocity Filter (ABC)",
+    "Inventory Velocity Scope (ABC)",
     options=sku_df['abc_class'].unique(),
     default=sku_df['abc_class'].unique(),
     help="A: Fast-moving anchors (top 70% revenue), B: Medium movers, C: Slow-moving clearance targets."
@@ -161,9 +142,8 @@ bundle_discount_slider = st.sidebar.slider(
     help="Target discount applied to combined Anchor + Slow Mover bundles."
 ) / 100.0
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("**Target Roles**: Merchandising VP | Supply Chain Director | Business Analyst")
-st.sidebar.markdown("**System Version**: Enterprise v1.0")
+st.sidebar.divider()
+st.sidebar.caption("System Version: Enterprise v1.0")
 
 df_filtered = sku_df[sku_df['abc_class'].isin(abc_filter)]
 
@@ -176,41 +156,40 @@ total_skus = len(df_filtered)
 avg_gmroi = df_filtered["gmroi"].mean()
 c_stock_capital = df_filtered[df_filtered['abc_class'].str.startswith('C')]['avg_inventory_capital'].sum()
 dead_stock_count = len(df_filtered[df_filtered['inventory_status'].str.contains('Dead Stock')])
-margin_saved_est = c_stock_capital * 0.18 # Estimated 18% margin recovery via smart bundling
 
 with c1:
     st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-label">Active SKUs Analyzed</div>
-        <div class="kpi-value">{total_skus:,}</div>
-        <div class="kpi-subtext">Across Apparel & Footwear</div>
+    <div class="metric-card">
+        <div class="metric-label">Active SKUs Analyzed</div>
+        <div class="metric-value">{total_skus:,}</div>
+        <div class="metric-sub">Across Store Catalog</div>
     </div>
     """, unsafe_allow_html=True)
 
 with c2:
     st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-label">Average GMROI Productivity</div>
-        <div class="kpi-value">{avg_gmroi:.2f}x</div>
-        <div class="kpi-subtext">Target Benchmark: 2.50x</div>
+    <div class="metric-card">
+        <div class="metric-label">Average GMROI Productivity</div>
+        <div class="metric-value">{avg_gmroi:.2f}x</div>
+        <div class="metric-sub">Benchmark: 2.50x</div>
     </div>
     """, unsafe_allow_html=True)
 
 with c3:
     st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-label">Slow-Mover Stock Capital</div>
-        <div class="kpi-value">${c_stock_capital:,.0f}</div>
-        <div class="kpi-subtext">At Risk of Holding Cost</div>
+    <div class="metric-card">
+        <div class="metric-label">Slow-Mover Stock Capital</div>
+        <div class="metric-value">${c_stock_capital:,.0f}</div>
+        <div class="metric-sub">At Risk of Holding Overhead</div>
     </div>
     """, unsafe_allow_html=True)
 
 with c4:
     st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-label">High-Risk Dead Stock SKUs</div>
-        <div class="kpi-value kpi-alert">{dead_stock_count}</div>
-        <div class="kpi-subtext kpi-alert">Action Required (GMROI &lt; 1.20)</div>
+    <div class="metric-card">
+        <div class="metric-label">High-Risk Dead Stock SKUs</div>
+        <div class="metric-value metric-alert">{dead_stock_count}</div>
+        <div class="metric-sub metric-alert">GMROI &lt; 1.20x Target</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -221,9 +200,9 @@ st.markdown("<br>", unsafe_allow_html=True)
 # -------------------------------------------------------------
 tab1, tab2, tab3, tab4 = st.tabs([
     "Portfolio Health & GMROI Matrix",
-    "Customer Sentiment & Diagnostic Insights",
-    "Smart Clearance & Bundle Simulator",
-    "Strategic Recommendations & BI Guide"
+    "Customer Sentiment & Diagnostics",
+    "Clearance & Bundle Simulator",
+    "Operational Strategy & BI Code"
 ])
 
 # -------------------------------------------------------------
@@ -250,25 +229,25 @@ with tab1:
             "gmroi": "GMROI Ratio ($ Gross Margin / $ Inventory Investment)",
             "abc_class": "Velocity Tier"
         },
-        height=500
+        height=480
     )
     fig_scatter.add_hline(
         y=1.20,
         line_dash="dash",
         line_color="#F59E0B",
-        annotation_text="GMROI Alert Benchmark (1.20x)",
+        annotation_text="GMROI Alert Threshold (1.20x)",
         annotation_position="bottom right"
     )
     fig_scatter.update_layout(
         plot_bgcolor="#FFFFFF",
         paper_bgcolor="#FFFFFF",
         font=dict(family="Inter, sans-serif", color="#0F172A"),
-        margin=dict(l=20, r=20, t=40, b=20)
+        margin=dict(l=20, r=20, t=30, b=20)
     )
     st.plotly_chart(fig_scatter, use_container_width=True)
 
-    st.markdown("### High-Risk Inventory Clearance Action List")
-    st.markdown("Products flagged as **C-Class (Slow Moving)** with **GMROI < 1.20x**, requiring immediate bundling clearance action.")
+    st.markdown("### High-Risk Inventory Clearance List")
+    st.markdown("Products flagged as **C-Class (Slow Moving)** with **GMROI < 1.20x**, requiring clearance bundling action.")
     
     dead_stock_df = df_filtered[df_filtered['abc_class'].str.startswith('C')].sort_values(by='gmroi', ascending=True)
     
@@ -285,23 +264,23 @@ with tab1:
             'stock_on_hand': 'Stock On Hand',
             'inventory_age_days': 'Age (Days)',
             'gmroi': 'GMROI Index',
-            'inventory_status': 'Inventory Risk Status'
+            'inventory_status': 'Inventory Status'
         }),
         use_container_width=True,
         hide_index=True
     )
 
 # -------------------------------------------------------------
-# TAB 2: CUSTOMER SENTIMENT & DIAGNOSTIC INSIGHTS
+# TAB 2: CUSTOMER SENTIMENT & DIAGNOSTICS
 # -------------------------------------------------------------
 with tab2:
     st.markdown("### 3-Step NLP Customer Sentiment Diagnostics")
-    st.markdown("Uncovering why products are slow-moving by extracting customer feedback signals and categorizing operational root causes.")
+    st.markdown("Extracting customer feedback signals to understand why products are slow-moving and categorizing operational root causes.")
     
     col_step1, col_step2 = st.columns(2)
     
     with col_step1:
-        st.markdown("#### Step 1: Overall Customer Sentiment Distribution (VADER Polarity)")
+        st.markdown("#### Step 1: Sentiment Distribution (VADER Polarity)")
         if reviews_df is not None and not reviews_df.empty:
             sentiment_counts = reviews_df['sentiment_label'].value_counts().reset_index()
             sentiment_counts.columns = ['Sentiment', 'Count']
@@ -321,7 +300,7 @@ with tab2:
             
     with col_step2:
         st.markdown("#### Step 2: Voice-of-Customer Key Phrases (TF-IDF N-Grams)")
-        st.markdown("Recurring 2-word and 3-word phrases extracted from negative customer reviews explaining *why* sales stagnate.")
+        st.markdown("Recurring phrases extracted from negative customer reviews explaining *why* sales stagnate.")
         if ngrams_df is not None and not ngrams_df.empty:
             fig_ngrams = px.bar(
                 ngrams_df.head(8),
@@ -342,23 +321,21 @@ with tab2:
         else:
             st.info("No negative N-grams extracted.")
 
-    st.markdown("---")
+    st.divider()
     
-    st.markdown("#### Step 3: Root Cause Action Matrix")
-    st.markdown("Categorizing complaints into actionable operational decisions for merchandising teams:")
-    
+    st.markdown("#### Step 3: Operational Root Cause Action Matrix")
     m1, m2, m3 = st.columns(3)
     with m1:
         st.markdown("""
         **1. Sizing & Fit Flaws** (*"runs small", "tight sleeves"*)
-        * **Action**: **STOP Price Discounts**
-        * **Rationale**: Slashes won't fix high return rates; initiate fit pattern correction.
+        * **Action**: **HALT Price Discounts**
+        * **Rationale**: Markdowns will not fix fit dissatisfaction; initiate pattern correction.
         """)
     with m2:
         st.markdown("""
         **2. Price Resistance** (*"overpriced for quality"*)
         * **Action**: **APPROVE Smart Bundle**
-        * **Rationale**: Customer values item at lower price point; pair with high-margin Anchor.
+        * **Rationale**: Customer demands lower price point; pair with high-margin Anchor.
         """)
     with m3:
         st.markdown("""
@@ -378,11 +355,11 @@ with tab2:
     st.dataframe(sub_rev[disp_cols].head(15), use_container_width=True, hide_index=True)
 
 # -------------------------------------------------------------
-# TAB 3: SMART CLEARANCE & BUNDLE SIMULATOR
+# TAB 3: CLEARANCE & BUNDLE SIMULATOR
 # -------------------------------------------------------------
 with tab3:
     st.markdown("### Market Basket Co-Purchasing Rules (Apriori Mining)")
-    st.markdown("Identified product association rules pairing high-demand **Anchor SKUs (A-Class)** with stagnant **Slow-Movers (C-Class)**.")
+    st.markdown("Discovered association rules pairing high-demand **Anchor SKUs (A-Class)** with stagnant **Slow-Movers (C-Class)**.")
     
     if bundles_df is not None and not bundles_df.empty:
         st.dataframe(
@@ -405,9 +382,9 @@ with tab3:
             hide_index=True
         )
         
-        st.markdown("---")
+        st.divider()
         st.markdown("### Live Bundle Margin Recovery Simulator")
-        st.markdown("Interactively test the financial impact of creating a smart bundle vs. a standalone 50% clearance slash.")
+        st.markdown("Interactively test the financial impact of creating a smart bundle vs. a standalone 50% clearance markdown.")
         
         sim_c1, sim_c2 = st.columns(2)
         with sim_c1:
@@ -449,21 +426,21 @@ with tab3:
         st.info("No co-purchasing association rules generated for current filters.")
 
 # -------------------------------------------------------------
-# TAB 4: STRATEGIC RECOMMENDATIONS & BI GUIDE
+# TAB 4: OPERATIONAL STRATEGY & BI CODE
 # -------------------------------------------------------------
 with tab4:
-    st.markdown("### Executive Action Plan & Roadmap")
+    st.markdown("### Operational Execution Roadmap")
     st.markdown("""
-    #### 4-Phase Operational Execution Strategy
+    #### 4-Phase Execution Roadmap
     1. **Phase 1: Automated ERP Alerts (Day 45)**: Trigger warning alerts in inventory systems when an SKU reaches 45+ Days in Inventory with GMROI < 1.20x.
     2. **Phase 2: Sentiment Filtering**: Run 3-Step NLP diagnostics on text reviews. Halt discounting for *Sizing Flaws* and forward patterns to product development. Approve bundle discounts for *Price Resistance*.
-    3. **Phase 3: E-Commerce Bundle Placement**: Automatically inject high-lift Apriori bundle pairs directly into product detail pages (PDP) as *"Frequently Bought Together"*.
+    3. **Phase 3: E-Commerce Bundle Placement**: Inject high-lift Apriori bundle pairs directly into product detail pages (PDP) as *"Frequently Bought Together"*.
     4. **Phase 4: Dynamic Discount Pricing**: Apply 15%–20% bundle discounts to accelerate turnover while preserving total gross margin dollars above product cost.
     """)
     
-    st.markdown("---")
-    st.markdown("### Enterprise BI Integration (Power BI & Tableau Specs)")
-    st.markdown("Ready-to-copy calculated fields for integration into corporate business intelligence dashboards:")
+    st.divider()
+    st.markdown("### Enterprise BI Code Snippets (Power BI & Tableau Specs)")
+    st.markdown("Calculated fields for corporate business intelligence integration:")
     
     st.code("""
 -- Power BI DAX: Gross Margin Return on Inventory (GMROI)
@@ -482,5 +459,5 @@ IF(CumPercent <= 0.70, "A (High Velocity)",
     IF(CumPercent <= 0.90, "B (Medium Velocity)", "C (Slow Moving)"))
     """, language="sql")
 
-st.sidebar.markdown("---")
-st.sidebar.caption("**Market Basket & Sentiment Clearance Control Tower**")
+st.sidebar.divider()
+st.sidebar.caption("Market Basket & Sentiment Clearance Control Tower")
