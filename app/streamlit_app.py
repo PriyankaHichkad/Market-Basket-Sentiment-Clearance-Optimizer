@@ -106,25 +106,31 @@ def load_enterprise_data():
         st.error(f"Data Connection Error: {e}")
         return None, None, None, None, None
         
-    # Financial Analytics (ABC Pareto & GMROI Ratio)
-    ifa = InventoryFinanceAnalytics()
-    sku_abc = ifa.calculate_abc_classification(sku_df)
-    sku_fin = ifa.calculate_gmroi(sku_abc)
-    
-    # 3-Step NLP Sentiment Diagnostics Workflow
-    sd = SentimentDiagnostics()
-    step1_reviews = sd.step1_vader_preprocessing(clean_reviews)
-    step2_ngrams = sd.step2_tfidf_ngram_extraction(step1_reviews)
-    step3_sku_sentiment = sd.step3_aggregate_business_insights(step1_reviews)
-    
-    # Market Basket Co-Purchasing Engine (Apriori)
-    mba = MarketBasketAnalyzer(min_support=0.003, min_confidence=0.10, min_lift=1.1)
-    b_matrix = mba.prepare_basket_matrix(clean_retail, max_items=100)
-    freq_items = mba.run_apriori(b_matrix)
-    rules = mba.generate_association_rules(freq_items)
-    bundles = mba.find_bundle_recommendations(rules, sku_fin)
-    
-    return sku_fin, step1_reviews, step2_ngrams, step3_sku_sentiment, bundles
+    try:
+        # Financial Analytics (ABC Pareto & GMROI Ratio)
+        ifa = InventoryFinanceAnalytics()
+        sku_abc = ifa.calculate_abc_classification(sku_df)
+        sku_fin = ifa.calculate_gmroi(sku_abc)
+        
+        # 3-Step NLP Sentiment Diagnostics Workflow
+        sd = SentimentDiagnostics()
+        step1_reviews = sd.step1_vader_preprocessing(clean_reviews)
+        step2_ngrams = sd.step2_tfidf_ngram_extraction(step1_reviews)
+        step3_sku_sentiment = sd.step3_aggregate_business_insights(step1_reviews)
+        
+        # Market Basket Co-Purchasing Engine (Apriori)
+        mba = MarketBasketAnalyzer(min_support=0.008, min_confidence=0.10, min_lift=1.1)
+        b_matrix = mba.prepare_basket_matrix(clean_retail, max_items=80)
+        freq_items = mba.run_apriori(b_matrix)
+        rules = mba.generate_association_rules(freq_items)
+        bundles = mba.find_bundle_recommendations(rules, sku_fin)
+        
+        return sku_fin, step1_reviews, step2_ngrams, step3_sku_sentiment, bundles
+    except Exception as err:
+        st.error(f"Analytics Pipeline Execution Error: {err}")
+        st.exception(err)
+        return None, None, None, None, None
+
 
 with st.spinner("Initializing Enterprise Data Pipeline & Running Analytics Engine..."):
     sku_df, reviews_df, ngrams_df, sku_sentiment_df, bundles_df = load_enterprise_data()
