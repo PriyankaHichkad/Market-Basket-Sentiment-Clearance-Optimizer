@@ -146,8 +146,6 @@ bundle_discount_slider = st.sidebar.slider(
     help="Target discount applied to combined Anchor + Slow Mover bundles."
 ) / 100.0
 
-st.sidebar.divider()
-st.sidebar.caption("System Version: Enterprise v1.0")
 
 df_filtered = sku_df[sku_df['abc_class'].isin(abc_filter)]
 
@@ -463,5 +461,3 @@ IF(CumPercent <= 0.70, "A (High Velocity)",
     IF(CumPercent <= 0.90, "B (Medium Velocity)", "C (Slow Moving)"))
     """, language="sql")
 
-st.sidebar.divider()
-st.sidebar.caption("Market Basket & Sentiment Clearance Control Tower")
