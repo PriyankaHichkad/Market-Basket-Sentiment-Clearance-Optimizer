@@ -299,8 +299,8 @@ def create_executive_deck(output_path: str):
         "1. Standalone Clearance: Price slashed by 50%. Margin drops below unit cost + holding overhead.",
         "2. Smart Bundle Discount: 15-20% discount applied to combined basket (Anchor + Slow Mover).",
         "3. Gross Margin Dollar Preservation: High margin on Anchor SKU absorbs bundle discount, protecting total dollar profitability.",
-        "4. Inventory Velocity Acceleration: Clears stagnant stock 3x faster than standalone markdowns.",
-        "5. Holding Cost Savings: Eliminates 25% annual holding cost burden on slow-moving inventory capital."
+        "4. Inventory Velocity Acceleration: Bundles cross-sell stagnant stock by pairing it with high-frequency anchors.",
+        "5. Holding Cost Savings: Mitigates holding cost burden across identified dead stock SKUs."
     ]
     for mp in model_points:
         p = tf7.add_paragraph()
@@ -313,7 +313,7 @@ def create_executive_deck(output_path: str):
     # SLIDE 8: Financial Impact & Simulation
     # -------------------------------------------------------------
     slide8 = prs.slides.add_slide(blank_layout)
-    add_header(slide8, "Financial Impact & Margin Recovery Simulation")
+    add_header(slide8, "Financial Impact & Inventory Risk Analysis")
     
     box_sim = slide8.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(1.8), Inches(11.7), Inches(4.8))
     box_sim.fill.solid()
@@ -325,16 +325,16 @@ def create_executive_deck(output_path: str):
     tf_s.word_wrap = True
     
     p = tf_s.paragraphs[0]
-    p.text = "Clearance Strategy Financial Comparison (Portfolio Scale)"
+    p.text = "Empirical Findings & Portfolio Analytics Summary"
     p.font.size = Pt(18)
     p.font.bold = True
     p.font.color.rgb = GREEN
     
     sim_results = [
-        "• Gross Margin Recovery: +$142,000 in preserved gross margin vs. standalone 50% clearance slashes.",
-        "• Inventory Capital Unlocked: 78% of stagnant C-Class stock cleared within 45 days.",
-        "• Average GMROI Improvement: GMROI index increased from 1.15 to 2.45 across targeted product categories.",
-        "• Customer Basket Value (AOV): Average Order Value increased by +18.5% due to bundle upselling."
+        "• Catalog Risk Exposure: Identified 2,609 slow-moving C-Class SKUs (66.5% of catalog) generating only 10% of revenue.",
+        "• Trapped Inventory Capital: $1.33M in capital trapped across 2,333 dead stock SKUs with GMROI < 1.20x.",
+        "• Sentiment Root Causes: 53.9% of negative reviews driven by sizing/fit flaws where price discounting is counterproductive.",
+        "• High-Affinity Cross-Tier Bundles: Mined 50 bundle pairs combining anchors and slow-movers with an average Lift of 4.83x."
     ]
     for sr in sim_results:
         p = tf_s.add_paragraph()
