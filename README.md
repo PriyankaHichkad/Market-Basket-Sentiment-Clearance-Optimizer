@@ -16,8 +16,8 @@ To ensure complete transparency during technical review:
 
 ### 2. Modeled Supply Chain & Financial Assumptions
 Public transaction logs contain retail selling prices and quantities, but omit wholesale unit costs and warehouse stock levels. To calculate financial metrics (**GMROI** and **ABC Pareto Velocity**), the pipeline models these fields based on standard retail supply chain principles:
-* **Wholesale Unit Cost (`avg_unit_cost`)**: Modeled assuming a standard retail gross margin range of **40% to 60%** on average selling price.
-* **Stock On Hand (`stock_on_hand`) & Inventory Age (`inventory_age_days`)**: Modeled based on observed sales velocity and transaction recency (slow-moving items modeled with higher sitting stock capital).
+* **Wholesale Unit Cost (`avg_unit_cost`)**: Modeled assuming a standard retail gross margin range of **40% to 60%** on average selling price (derived deterministically via `zlib.crc32(ProductID)`).
+* **Stock On Hand (`stock_on_hand`) & Days of Supply (`days_of_supply`)**: Modeled from tier-based Days of Supply (DOS) targets (A-Class: 35–50 days, B-Class: 55–75 days, C-Class: 130–220+ days with aging penalty).
 
 ---
 

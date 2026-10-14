@@ -1,4 +1,5 @@
 import os
+import zlib
 import pandas as pd
 import numpy as np
 
@@ -74,8 +75,8 @@ class ETLPipeline:
         max_date = sku_df['last_sold_date'].max()
         sku_df['days_since_last_sale'] = (max_date - sku_df['last_sold_date']).dt.days.fillna(30).astype(int)
         
-        # Deterministic wholesale unit cost (assumes 40% - 60% gross margin based on ProductID hash)
-        sku_df['cost_seed'] = sku_df['ProductID'].apply(lambda x: (hash(str(x)) % 1000) / 1000.0)
+        # Deterministic wholesale unit cost (assumes 40% - 60% gross margin based on ProductID CRC32)
+        sku_df['cost_seed'] = sku_df['ProductID'].apply(lambda x: (zlib.crc32(str(x).encode('utf-8')) % 1000) / 1000.0)
         sku_df['avg_unit_cost'] = (sku_df['avg_unit_price'] * (1.0 - (0.40 + 0.20 * sku_df['cost_seed']))).round(2)
         
         # Annual dataset active period
