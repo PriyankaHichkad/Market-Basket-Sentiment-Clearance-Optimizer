@@ -99,6 +99,42 @@ Retailers accumulate stagnant, slow-moving C-Class inventory at season end. Stan
 
 ---
 
+## Sell-Through Scenario Analysis (modeled assumptions)
+
+The per-unit bundle comparison assumes the same number of units clear under every strategy. The reason to bundle is that it should clear **more** stock, so the scenario model (`DynamicBundlingEngine.simulate_clearance_scenario`) makes that an explicit input. It compares gross profit over a clearance window for a standalone 50% markdown versus a bundle, with unsold units carrying holding cost.
+
+| Parameter | Baseline | Meaning |
+|---|---|---|
+| `markdown_sell_through` | 60% | Share of slow-mover stock a 50% markdown clears in the window |
+| `bundle_sell_through` | 80% | Share cleared inside bundles in the same window |
+| `anchor_incremental_share` | 30% | Share of bundled anchor units that are genuinely new sales; the rest would have sold at full price, so the bundle discount on them is given away |
+| `bundle_discount_scope` | `both` | `both` discounts anchor + slow mover; `slow_only` keeps the anchor at list price |
+| `window_days` | 45 | Clearance window; sets holding cost on unsold units |
+
+**None of these are measured.** They are scenario inputs: the output answers "under these assumptions, does bundling beat a markdown?" and "how much sell-through would bundling need to break even?". Reproduce with `python3 scripts/scenario_analysis.py`, or adjust the sliders in the dashboard.
+
+**Baseline result on the 52 mined bundles**
+
+| Discount design | Bundles beating the 50% markdown | Median profit delta | Total modeled delta |
+|---|---|---|---|
+| Anchor + slow mover (20% off both) | 41 / 52 | +$77.63 | +$1,951 |
+| Slow mover only (20% off, anchor at list) | 52 / 52 | +$343.25 | +$23,293 |
+
+**What the sensitivity grid shows**
+
+* Outcomes depend far more on anchor incrementality and the anchor-to-slow-mover price ratio than on sell-through. With a blanket discount, bundles beat the markdown in only 15 / 52 cases if none of the bundled anchor sales are incremental, and 52 / 52 if 60% are.
+* Blanket bundle discounts lose when the anchor is priced well above the slow mover: bundles with an anchor more than 5x the slow-mover price won in 3 of 13, while bundles at 5x or less won in 38 of 39.
+* Discounting only the slow mover beat the markdown in every cell of the sell-through x incrementality grid, and at every markdown depth tested (30%, 40%, 50%) under the baseline assumptions. This is close to structural: it is the same clearance item at a smaller discount, so it only loses if the bundle sells far fewer units than the markdown.
+
+**Limitations to keep in mind when reading these numbers**
+
+* Costs are modeled at a 40-60% margin, so a 50% markdown sells at or below cost for roughly half of the C-Class catalog, and for all 6 slow movers that appear in bundles. That makes the markdown a weak benchmark, and the dollar figures above should be read as a comparison under assumptions, not as recovered profit.
+* The 52 bundles are 6 distinct slow-mover SKUs paired with 25 anchors; two of the slow movers account for 44 bundles.
+* ABC tiers rank SKUs by revenue share, so a low-priced item that sells in volume can land in C-Class. The "dead stock" flag therefore means low revenue contribution plus low modeled GMROI, not zero sales (the flagged SKUs have a median of 142 units sold).
+* Non-merchandise StockCodes (postage, carriage, fees, manual adjustments, gift vouchers) are excluded in the ETL. Left in, "DOTCOM POSTAGE" ranks as the top A-Class SKU and appears as a bundle anchor.
+
+---
+
 ## Repository Structure
 
 ```
@@ -108,7 +144,9 @@ retail-basket-markdown-intelligence/
 ├── config/
 │   └── settings.yaml                   # Threshold configs (GMROI target, Apriori support/lift)
 ├── scripts/
-│   └── download_data.py                # Automated data download utility for fresh clones
+│   ├── download_data.py                # Automated data download utility for fresh clones
+│   ├── audit_metrics.py                # Recomputes every headline metric from the data
+│   └── scenario_analysis.py            # Sell-through scenario grid on the mined bundles
 ├── data/
 │   ├── raw/                            # Real-world raw e-commerce CSV datasets (Online Retail, Reviews)
 │   └── processed/                      # Analytics-ready aggregated tables

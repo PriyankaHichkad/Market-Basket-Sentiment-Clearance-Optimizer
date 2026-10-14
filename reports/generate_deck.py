@@ -347,8 +347,8 @@ def create_executive_deck(output_path: str):
     model_points = [
         "1. Standalone Clearance: 50% price slash severely erodes gross margin dollars, risking cash recovery below inventory unit cost.",
         "2. Smart Bundle Pricing: 15%–20% discount applied across co-purchased pair (Anchor + Slow Mover) mined via Apriori rules.",
-        "3. Selective Margin Accretion: Bundles are accretive only when Anchor/Slow price ratio <= 1.50 (at 20% discount); extreme price gaps destroy anchor margin.",
-        f"4. Algorithmic Gatekeeper: Engine selectively approves {accretive_count} of {bundle_count} mined bundles for bundling while routing price-asymmetric pairs to targeted clearance.",
+        "3. Margin Protection Depends on Discount Design: a blanket bundle discount gives away anchor margin; discounting only the slow mover protects it (see scenario analysis).",
+        f"4. Algorithmic Gatekeeper: Engine selectively approves {accretive_count} of {bundle_count} mined bundles for blanket bundling while routing price-asymmetric pairs to targeted clearance.",
         "5. Working Capital Optimization: Protects high-velocity anchor margin dollars while systematically unlocking stagnant C-Class stock."
     ]
     for mp in model_points:
@@ -379,12 +379,20 @@ def create_executive_deck(output_path: str):
     p.font.bold = True
     p.font.color.rgb = GREEN
     
+    if bundles.empty:
+        bundle_line = "• High-Affinity Cross-Tier Bundles: no anchor / slow-mover bundles met the mining thresholds."
+    else:
+        bundle_line = (
+            f"• High-Affinity Cross-Tier Bundles: Mined {len(bundles)} bundle pairs combining anchors and "
+            f"slow-movers with an average Lift of {bundles['lift'].mean():.2f}x."
+        )
+
     # Pure dynamic results directly from pipeline analytics
     sim_results = [
         f"• Catalog Risk Exposure: Identified {c_count:,} slow-moving C-Class SKUs ({c_pct:.1f}% of catalog) generating 10% of revenue.",
-        f"• Trapped Inventory Capital: ${dead_capital:,.0f} in capital trapped across {dead_count:,} dead stock SKUs with GMROI < 1.20x.",
+        f"• Trapped Inventory Capital: ${dead_capital:,.0f} (modeled) across {dead_count:,} low-revenue-tier SKUs with GMROI < 1.20x.",
         f"• Sentiment Root Causes: {sizing_pct:.1f}% of negative reviews driven by sizing/fit flaws where price discounting is counterproductive.",
-        f"• High-Affinity Cross-Tier Bundles: Mined {bundle_count:,} bundle pairs combining anchors and slow-movers with an average Lift of {avg_lift:.2f}x."
+        bundle_line,
     ]
     for sr in sim_results:
         p = tf_s.add_paragraph()

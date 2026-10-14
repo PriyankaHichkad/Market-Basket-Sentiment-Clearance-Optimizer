@@ -146,6 +146,36 @@ bundle_discount_slider = st.sidebar.slider(
     help="Target discount applied to combined Anchor + Slow Mover bundles."
 ) / 100.0
 
+with st.sidebar.expander("Clearance Scenario Assumptions (modeled)", expanded=False):
+    st.caption(
+        "These are assumptions, not observed sales data. They drive the "
+        "sell-through scenario in the Bundle Simulator tab."
+    )
+    markdown_sell_through = st.slider(
+        "Standalone 50% markdown sell-through (%)", min_value=10, max_value=100, value=60, step=5,
+        help="Share of slow-mover stock a standalone 50% markdown clears in the 45-day window."
+    ) / 100.0
+    bundle_sell_through = st.slider(
+        "Bundle sell-through (%)", min_value=10, max_value=100, value=80, step=5,
+        help="Share of slow-mover stock cleared inside bundles in the same window."
+    ) / 100.0
+    anchor_incremental_share = st.slider(
+        "Bundled anchor units that are new sales (%)", min_value=0, max_value=100, value=30, step=10,
+        help="The rest would have sold at full price anyway, so the bundle discount on them is given away."
+    ) / 100.0
+    discount_scope_label = st.radio(
+        "Bundle discount applies to",
+        ["Anchor + slow mover", "Slow mover only"],
+        index=0,
+        help="'Slow mover only' keeps the anchor at list price and discounts just the clearance item."
+    )
+scenario_scope = "both" if discount_scope_label.startswith("Anchor") else "slow_only"
+
+
+def signed_money(value: float) -> str:
+    """Formats a dollar amount with an explicit sign, e.g. +$12.00 or -$57.13."""
+    return f"{'+' if value >= 0 else '-'}${abs(value):,.2f}"
+
 
 df_filtered = sku_df[sku_df['abc_class'].isin(abc_filter)]
 
@@ -422,14 +452,82 @@ with tab3:
         with res_col3:
             st.metric("Net Bundle Gross Margin", f"${sim_res['bundle_gross_margin']:.2f}", delta=f"{sim_res['bundle_margin_pct']}% Margin Rate")
         with res_col4:
-            margin_saved = sim_res['margin_saved_vs_clearance']
-            val_display = f"${margin_saved:.2f}" if margin_saved >= 0 else f"-${abs(margin_saved):.2f}"
-            st.metric("Margin Dollars Saved vs Standalone Slash", val_display, delta=f"{margin_saved:+.2f}")
-            
+            saved = sim_res['margin_saved_vs_clearance']
+            st.metric(
+                "Margin vs Standalone Slash (per unit pair)",
+                signed_money(saved),
+                delta=f"{signed_money(saved)} vs 50% markdown",
+            )
+        st.caption("Per-unit view: assumes the same number of units clear under both strategies. See the scenario below for the sell-through view.")
+
         if sim_res['strategy_recommendation'] == 'Approve Bundle':
-            st.success(f"Strategy Recommendation: **Approve Bundle** (Accretive margin: preserves ${margin_saved:.2f} in gross margin vs a 50% standalone markdown)")
+            st.success(f"Strategy Recommendation: **Approve Bundle** (Accretive margin: preserves {signed_money(saved)} in gross margin vs a 50% standalone markdown)")
         else:
-            st.warning(f"Strategy Recommendation: **Review Pricing / Reject Bundle** (Dilutive margin: anchor discount exceeds slow-mover markdown savings by ${abs(margin_saved):.2f})")
+            st.warning(f"Strategy Recommendation: **Review Pricing / Reject Bundle** (Dilutive margin: anchor discount exceeds slow-mover markdown savings by ${abs(saved):.2f})")
+
+        st.divider()
+        st.markdown("### Sell-Through Scenario (modeled assumptions)")
+        st.markdown(
+            "Bundling is meant to clear **more** stock than a markdown. This compares gross profit over a "
+            "45-day window for the selected pair using the sell-through assumptions in the sidebar."
+        )
+        scenario_inputs = dict(
+            bundle_discount_pct=bundle_discount_slider,
+            bundle_discount_scope=scenario_scope,
+            markdown_sell_through=markdown_sell_through,
+            bundle_sell_through=bundle_sell_through,
+            anchor_incremental_share=anchor_incremental_share,
+        )
+        scen = dbe.simulate_clearance_scenario(
+            anchor_price=float(anc_row['avg_unit_price']),
+            anchor_cost=float(anc_row['avg_unit_cost']),
+            slow_price=float(slow_row['avg_unit_price']),
+            slow_cost=float(slow_row['avg_unit_cost']),
+            slow_stock_units=float(slow_row['stock_on_hand']),
+            **scenario_inputs,
+        )
+        be = scen['breakeven_bundle_sell_through']
+        if be is None:
+            be_text = "Not reachable"
+        elif be < 0:
+            be_text = "Any (markdown loses money)"
+        elif be > 1:
+            be_text = ">100% (not reachable)"
+        else:
+            be_text = f"{be:.0%}"
+
+        sc1, sc2, sc3, sc4 = st.columns(4)
+        with sc1:
+            st.metric("Standalone Markdown Profit", signed_money(scen['markdown_profit']))
+        with sc2:
+            st.metric("Bundle Profit", signed_money(scen['bundle_profit']))
+        with sc3:
+            st.metric(
+                "Bundle vs Markdown",
+                signed_money(scen['profit_delta']),
+                delta="Bundle wins" if scen['bundle_wins'] else "Markdown wins",
+                delta_color="normal" if scen['bundle_wins'] else "inverse",
+            )
+        with sc4:
+            st.metric("Breakeven Bundle Sell-Through", be_text)
+
+        portfolio = dbe.evaluate_clearance_scenarios(bundles_df, sku_df, **scenario_inputs)
+        port_summary = dbe.summarize_scenario(portfolio)
+        if port_summary:
+            st.markdown("#### All mined bundles under these assumptions")
+            pc1, pc2, pc3, pc4 = st.columns(4)
+            with pc1:
+                st.metric("Bundles Beating Markdown", f"{port_summary['bundles_beating_markdown']} / {port_summary['bundles']}")
+            with pc2:
+                st.metric("Median Profit Delta", signed_money(port_summary['median_profit_delta']))
+            with pc3:
+                st.metric("Total Modeled Profit Delta", signed_money(port_summary['total_profit_delta']))
+            with pc4:
+                st.metric("Cannot Win at Any Sell-Through", f"{port_summary['cannot_win']}")
+        st.caption(
+            "Modeled, not measured: costs assume a 40-60% margin, stock comes from days-of-supply targets, "
+            "and sell-through and anchor incrementality are the assumptions above."
+        )
     else:
         st.info("No co-purchasing association rules generated for current filters.")
 

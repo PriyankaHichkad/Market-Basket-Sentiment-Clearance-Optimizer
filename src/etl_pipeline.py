@@ -3,6 +3,11 @@ import zlib
 import pandas as pd
 import numpy as np
 
+NON_PRODUCT_CODES = {
+    'POST', 'DOT', 'M', 'D', 'S', 'B', 'C2', 'CRUK', 'AMAZONFEE',
+    'BANK CHARGES', 'PADS', 'ADJUST', 'ADJUST2', 'TEST001', 'TEST002',
+}
+
 class ETLPipeline:
     """
     ETL Pipeline for Retail Transaction Logs and Customer Reviews.
@@ -49,6 +54,14 @@ class ETLPipeline:
 
         # Filter valid transactions with positive quantity and unit price
         df = df[(df['Quantity'] > 0) & (df['UnitPrice'] > 0)]
+
+        # Drop non-merchandise StockCodes (postage, carriage, fees, manual
+        # adjustments, gift vouchers). They are ledger lines, not sellable
+        # products: left in, "DOTCOM POSTAGE" becomes the top-revenue A-class
+        # SKU and gets paired with real products as a bundle anchor.
+        code = df['ProductID'].astype(str).str.strip().str.upper()
+        df = df[~(code.isin(NON_PRODUCT_CODES) | code.str.startswith('GIFT_'))]
+
         df['LineRevenue'] = df['Quantity'] * df['UnitPrice']
         
         if 'InvoiceDate' in df.columns:
