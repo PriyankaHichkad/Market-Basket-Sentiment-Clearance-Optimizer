@@ -39,6 +39,8 @@ class DynamicBundlingEngine:
         # Mathematically accretive (margin_delta >= 0) iff:
         # anchor_price / slow_price <= (standalone_clearance_discount_pct - bundle_discount_pct) / bundle_discount_pct
         # E.g., at 50% clearance vs 20% bundle discount, accretive only when anchor_price <= 1.5 * slow_price.
+        anchor_alone_margin = anchor_price - anchor_cost
+        combined_unbundled_margin = anchor_alone_margin + standalone_margin
         margin_delta = bundle_gross_margin - combined_unbundled_margin
         
         bundle_margin_pct = (bundle_gross_margin / bundle_price) if bundle_price > 0 else 0.0

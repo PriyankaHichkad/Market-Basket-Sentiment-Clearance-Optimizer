@@ -25,6 +25,55 @@ def create_executive_deck(output_path: str):
     
     blank_layout = prs.slide_layouts[6]
     
+    # Compute live empirical metrics across pipeline
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+        
+    from src.etl_pipeline import ETLPipeline
+    from src.inventory_finance import InventoryFinanceAnalytics
+    from src.sentiment_diagnostics import SentimentDiagnostics
+    from src.market_basket import MarketBasketAnalyzer
+    from src.dynamic_bundling_engine import DynamicBundlingEngine
+    
+    raw_dir = os.path.join(project_root, "data", "raw")
+    etl = ETLPipeline(raw_dir)
+    r_df, rev_df = etl.load_raw_data()
+    clean_r = etl.clean_retail_data(r_df)
+    sku_df = etl.aggregate_sku_level_metrics(clean_r)
+    
+    ifa = InventoryFinanceAnalytics()
+    fin_df = ifa.calculate_gmroi(ifa.calculate_abc_classification(sku_df))
+    
+    c_skus = fin_df[fin_df['abc_class'].str.startswith('C')]
+    dead_skus = fin_df[fin_df['inventory_status'].str.contains('Dead Stock')]
+    c_count = len(c_skus)
+    c_pct = (c_count / len(fin_df)) * 100
+    dead_count = len(dead_skus)
+    dead_capital = dead_skus['avg_inventory_capital'].sum()
+    c_capital = c_skus['avg_inventory_capital'].sum()
+    c_cap_pct = (c_capital / fin_df['avg_inventory_capital'].sum()) * 100
+
+    sd = SentimentDiagnostics()
+    clean_rev = etl.clean_reviews_data(rev_df)
+    step1_rev = sd.step1_vader_preprocessing(clean_rev)
+    neg_reviews = step1_rev[step1_rev['sentiment_label'] == 'Negative']
+    neg_count = len(neg_reviews)
+    sizing_count = len(neg_reviews[neg_reviews['root_cause_category'] == 'Sizing & Fit Flaw'])
+    sizing_pct = (sizing_count / neg_count * 100) if neg_count > 0 else 0.0
+
+    mba = MarketBasketAnalyzer(min_support=0.005, min_confidence=0.05, min_lift=1.05)
+    b_matrix = mba.prepare_basket_matrix(clean_r, sku_analytics_df=fin_df, max_items=100)
+    freq_items = mba.run_apriori(b_matrix)
+    rules = mba.generate_association_rules(freq_items)
+    bundles = mba.find_bundle_recommendations(rules, fin_df)
+    bundle_count = len(bundles)
+    avg_lift = bundles['lift'].mean() if not bundles.empty else 0.0
+
+    dbe = DynamicBundlingEngine()
+    eval_res = dbe.evaluate_portfolio_clearance(bundles, fin_df, discount_tier=0.20)
+    accretive_count = len(eval_res[eval_res['margin_saved_vs_clearance'] > 0])
+    
     def add_header(slide, title_text, category_text="RETAIL STRATEGY & SUPPLY CHAIN ANALYTICS"):
         # Header background banner
         header_shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, Inches(13.333), Inches(1.1))
@@ -203,8 +252,8 @@ def create_executive_deck(output_path: str):
     content4 = [
         "• Class A SKUs (Top 70% Revenue): High velocity anchors. Target GMROI > 3.0. Must never be discounted standalone.",
         "• Class B SKUs (Next 20% Revenue): Moderate movers. Balanced inventory turnover and healthy gross margins.",
-        "• Class C SKUs (Tail 10% Revenue): Slow-moving inventory representing 40%+ of total stock capital.",
-        "• Dead Stock Risk (GMROI < 1.2): High holding cost burden eating into operating cash flow.",
+        f"• Class C SKUs (Tail 10% Revenue): Slow-moving inventory representing {c_cap_pct:.1f}% of total stock capital (${c_capital:,.0f}).",
+        f"• Dead Stock Risk (GMROI < 1.2): {dead_count:,} SKUs locking up ${dead_capital:,.0f} in unproductive working capital.",
         "• Strategic Objective: Use Class A anchors as traffic drivers to clear Class C inventory via smart co-purchasing bundles."
     ]
     for c in content4:
@@ -299,7 +348,7 @@ def create_executive_deck(output_path: str):
         "1. Standalone Clearance: 50% price slash severely erodes gross margin dollars, risking cash recovery below inventory unit cost.",
         "2. Smart Bundle Pricing: 15%–20% discount applied across co-purchased pair (Anchor + Slow Mover) mined via Apriori rules.",
         "3. Selective Margin Accretion: Bundles are accretive only when Anchor/Slow price ratio <= 1.50 (at 20% discount); extreme price gaps destroy anchor margin.",
-        "4. Algorithmic Gatekeeper: Engine selectively approves 16 of 50 mined bundles for bundling while routing price-asymmetric pairs to targeted clearance.",
+        f"4. Algorithmic Gatekeeper: Engine selectively approves {accretive_count} of {bundle_count} mined bundles for bundling while routing price-asymmetric pairs to targeted clearance.",
         "5. Working Capital Optimization: Protects high-velocity anchor margin dollars while systematically unlocking stagnant C-Class stock."
     ]
     for mp in model_points:
@@ -330,41 +379,13 @@ def create_executive_deck(output_path: str):
     p.font.bold = True
     p.font.color.rgb = GREEN
     
-    # Dynamic computation of empirical metrics for Slide 8
-    try:
-        from src.etl_pipeline import ETLPipeline
-        from src.inventory_finance import InventoryFinanceAnalytics
-        
-        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        raw_dir = os.path.join(project_root, "data", "raw")
-        etl = ETLPipeline(raw_dir)
-        r_df, _ = etl.load_raw_data()
-        clean_r = etl.clean_retail_data(r_df)
-        sku_df = etl.aggregate_sku_level_metrics(clean_r)
-        
-        ifa = InventoryFinanceAnalytics()
-        fin_df = ifa.calculate_gmroi(ifa.calculate_abc_classification(sku_df))
-        
-        c_skus = fin_df[fin_df['abc_class'].str.startswith('C')]
-        dead_skus = fin_df[fin_df['inventory_status'].str.contains('Dead Stock')]
-        c_count = len(c_skus)
-        c_pct = (c_count / len(fin_df)) * 100
-        dead_count = len(dead_skus)
-        dead_capital = dead_skus['avg_inventory_capital'].sum()
-        
-        sim_results = [
-            f"• Catalog Risk Exposure: Identified {c_count:,} slow-moving C-Class SKUs ({c_pct:.1f}% of catalog) generating 10% of revenue.",
-            f"• Trapped Inventory Capital: ${dead_capital:,.0f} in capital trapped across {dead_count:,} dead stock SKUs with GMROI < 1.20x.",
-            "• Sentiment Root Causes: 53.9% of negative reviews driven by sizing/fit flaws where price discounting is counterproductive.",
-            "• High-Affinity Cross-Tier Bundles: Mined 50 bundle pairs combining anchors and slow-movers with an average Lift of 4.83x."
-        ]
-    except Exception:
-        sim_results = [
-            "• Catalog Risk Exposure: Identified 2,609 slow-moving C-Class SKUs (66.5% of catalog) generating 10% of revenue.",
-            "• Trapped Inventory Capital: $155,339 in capital trapped across 1,072 dead stock SKUs with GMROI < 1.20x.",
-            "• Sentiment Root Causes: 53.9% of negative reviews driven by sizing/fit flaws where price discounting is counterproductive.",
-            "• High-Affinity Cross-Tier Bundles: Mined 50 bundle pairs combining anchors and slow-movers with an average Lift of 4.83x."
-        ]
+    # Pure dynamic results directly from pipeline analytics
+    sim_results = [
+        f"• Catalog Risk Exposure: Identified {c_count:,} slow-moving C-Class SKUs ({c_pct:.1f}% of catalog) generating 10% of revenue.",
+        f"• Trapped Inventory Capital: ${dead_capital:,.0f} in capital trapped across {dead_count:,} dead stock SKUs with GMROI < 1.20x.",
+        f"• Sentiment Root Causes: {sizing_pct:.1f}% of negative reviews driven by sizing/fit flaws where price discounting is counterproductive.",
+        f"• High-Affinity Cross-Tier Bundles: Mined {bundle_count:,} bundle pairs combining anchors and slow-movers with an average Lift of {avg_lift:.2f}x."
+    ]
     for sr in sim_results:
         p = tf_s.add_paragraph()
         p.text = sr
