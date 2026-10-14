@@ -34,10 +34,11 @@ class DynamicBundlingEngine:
         total_bundle_cost = anchor_cost + slow_cost
         bundle_gross_margin = bundle_price - total_bundle_cost
         
-        # Margin Dollars Saved / Recovered
-        # Anchor alone margin = anchor_price - anchor_cost
-        anchor_alone_margin = anchor_price - anchor_cost
-        combined_unbundled_margin = anchor_alone_margin + standalone_margin
+        # Margin Dollars Saved / Recovered:
+        # margin_delta = slow_price * (standalone_clearance_discount_pct - bundle_discount_pct) - anchor_price * bundle_discount_pct
+        # Mathematically accretive (margin_delta >= 0) iff:
+        # anchor_price / slow_price <= (standalone_clearance_discount_pct - bundle_discount_pct) / bundle_discount_pct
+        # E.g., at 50% clearance vs 20% bundle discount, accretive only when anchor_price <= 1.5 * slow_price.
         margin_delta = bundle_gross_margin - combined_unbundled_margin
         
         bundle_margin_pct = (bundle_gross_margin / bundle_price) if bundle_price > 0 else 0.0
@@ -95,6 +96,7 @@ class DynamicBundlingEngine:
             res['anchor_desc'] = row.get('anchor_desc', anc_sku)
             res['slow_mover_desc'] = row.get('slow_mover_desc', slw_sku)
             res['lift'] = row.get('lift', 1.0)
+            res['price_ratio'] = round(anc_price / slw_price, 2) if slw_price > 0 else 0.0
             results.append(res)
             
         eval_df = pd.DataFrame(results)

@@ -422,8 +422,14 @@ with tab3:
         with res_col3:
             st.metric("Net Bundle Gross Margin", f"${sim_res['bundle_gross_margin']:.2f}", delta=f"{sim_res['bundle_margin_pct']}% Margin Rate")
         with res_col4:
-            st.metric("Margin Dollars Saved vs Standalone Slash", f"${sim_res['margin_saved_vs_clearance']:.2f}", delta=f"+${sim_res['margin_saved_vs_clearance']:.2f} Saved")
+            margin_saved = sim_res['margin_saved_vs_clearance']
+            val_display = f"${margin_saved:.2f}" if margin_saved >= 0 else f"-${abs(margin_saved):.2f}"
+            st.metric("Margin Dollars Saved vs Standalone Slash", val_display, delta=f"{margin_saved:+.2f}")
             
+        if sim_res['strategy_recommendation'] == 'Approve Bundle':
+            st.success(f"Strategy Recommendation: **Approve Bundle** (Accretive margin: preserves ${margin_saved:.2f} in gross margin vs a 50% standalone markdown)")
+        else:
+            st.warning(f"Strategy Recommendation: **Review Pricing / Reject Bundle** (Dilutive margin: anchor discount exceeds slow-mover markdown savings by ${abs(margin_saved):.2f})")
     else:
         st.info("No co-purchasing association rules generated for current filters.")
 

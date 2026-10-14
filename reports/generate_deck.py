@@ -296,11 +296,11 @@ def create_executive_deck(output_path: str):
     p.font.color.rgb = NAVY
     
     model_points = [
-        "1. Standalone Clearance: Price slashed by 50%. Margin drops below unit cost + holding overhead.",
-        "2. Smart Bundle Discount: 15-20% discount applied to combined basket (Anchor + Slow Mover).",
-        "3. Gross Margin Dollar Preservation: High margin on Anchor SKU absorbs bundle discount, protecting total dollar profitability.",
-        "4. Inventory Velocity Acceleration: Bundles cross-sell stagnant stock by pairing it with high-frequency anchors.",
-        "5. Holding Cost Savings: Mitigates holding cost burden across identified dead stock SKUs."
+        "1. Standalone Clearance: 50% price slash severely erodes gross margin dollars, risking cash recovery below inventory unit cost.",
+        "2. Smart Bundle Pricing: 15%–20% discount applied across co-purchased pair (Anchor + Slow Mover) mined via Apriori rules.",
+        "3. Selective Margin Accretion: Bundles are accretive only when Anchor/Slow price ratio <= 1.50 (at 20% discount); extreme price gaps destroy anchor margin.",
+        "4. Algorithmic Gatekeeper: Engine selectively approves 16 of 50 mined bundles for bundling while routing price-asymmetric pairs to targeted clearance.",
+        "5. Working Capital Optimization: Protects high-velocity anchor margin dollars while systematically unlocking stagnant C-Class stock."
     ]
     for mp in model_points:
         p = tf7.add_paragraph()

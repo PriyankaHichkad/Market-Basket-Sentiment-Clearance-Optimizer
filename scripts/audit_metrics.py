@@ -104,6 +104,15 @@ def run_actual_analysis():
         print(f"Bundle Confidence Range: {bundles['confidence'].min():.2%} - {bundles['confidence'].max():.2%}")
         print(f"Bundle Lift Range: {bundles['lift'].min():.2f} - {bundles['lift'].max():.2f} (Avg: {bundles['lift'].mean():.2f})")
         
+        # 5. Dynamic Bundling Simulation Audit
+        dbe = DynamicBundlingEngine()
+        print("\n[Dynamic Bundling Simulation Audit (50 Candidate Pairs)]")
+        for d in [0.15, 0.20, 0.25]:
+            eval_res = dbe.evaluate_portfolio_clearance(bundles, fin_df, discount_tier=d)
+            accretive = len(eval_res[eval_res['margin_saved_vs_clearance'] > 0])
+            net_delta = eval_res['margin_saved_vs_clearance'].sum()
+            print(f"Bundle Discount {int(d*100)}%: {accretive} of {len(eval_res)} beat 50% markdown | Net margin vs markdown: ${net_delta:,.2f}")
+        
     print("\n" + "=" * 60)
 
 if __name__ == "__main__":
