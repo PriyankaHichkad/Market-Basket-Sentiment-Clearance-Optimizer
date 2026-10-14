@@ -97,10 +97,16 @@ class SentimentDiagnostics:
 
         print(f"STEP 2: Extracting TF-IDF Bi-grams & Tri-grams across {len(neg_reviews):,} negative reviews...")
         
+        from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+        custom_stopwords = list(ENGLISH_STOP_WORDS.union({
+            'just', 'didn', 'really', 'wanted', 'looks', 'look', 'like', 'thought',
+            'don', 'did', 'wasn', 'felt', 'going', 'ordered', 'dress', 'shirt', 'item'
+        }))
+        
         vectorizer = TfidfVectorizer(
             ngram_range=(2, 3),
-            stop_words='english',
-            min_df=2,
+            stop_words=custom_stopwords,
+            min_df=3,
             max_features=top_n
         )
         

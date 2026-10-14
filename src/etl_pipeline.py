@@ -78,12 +78,35 @@ class ETLPipeline:
         sku_df['cost_seed'] = sku_df['ProductID'].apply(lambda x: (hash(str(x)) % 1000) / 1000.0)
         sku_df['avg_unit_cost'] = (sku_df['avg_unit_price'] * (1.0 - (0.40 + 0.20 * sku_df['cost_seed']))).round(2)
         
-        # Deterministic Stock On Hand & Inventory Age based on recency and sales velocity
-        velocity_daily = sku_df['total_units_sold'] / (sku_df['days_since_last_sale'] + 30)
-        sku_df['stock_on_hand'] = (velocity_daily * (30 + 90 * sku_df['cost_seed'])).astype(int) + 10
-        sku_df['inventory_age_days'] = sku_df['days_since_last_sale'] + (15 + (75 * sku_df['cost_seed'])).astype(int)
+        # Annual dataset active period
+        min_date = df_retail['InvoiceDate'].min() if 'InvoiceDate' in df_retail.columns else sku_df['last_sold_date'].min()
+        total_days = max(1, (max_date - min_date).days)
+        daily_sales = sku_df['total_units_sold'] / total_days
         
-        sku_df.drop(columns=['cost_seed'], inplace=True)
+        # Initial revenue share for supply chain stock targets (70-20-10 Pareto)
+        rev_sorted = sku_df.sort_values(by='total_revenue', ascending=False)
+        cum_rev = rev_sorted['total_revenue'].cumsum() / rev_sorted['total_revenue'].sum()
+        abc_pre = np.where(cum_rev <= 0.70, 'A', np.where(cum_rev <= 0.90, 'B', 'C'))
+        sku_df.loc[rev_sorted.index, 'temp_abc'] = abc_pre
+
+        # Supply chain Days of Supply (DOS) calibration:
+        # A-tier: Lean 30-45 DOS (high turnover)
+        # B-tier: Balanced 50-75 DOS
+        # C-tier: Bloated 120-220 DOS with aging penalty (sluggish turnover, clearance candidates)
+        dos = np.where(
+            sku_df['temp_abc'] == 'A',
+            35 + 15 * sku_df['cost_seed'],
+            np.where(
+                sku_df['temp_abc'] == 'B',
+                55 + 20 * sku_df['cost_seed'],
+                130 + 80 * sku_df['cost_seed'] + (sku_df['days_since_last_sale'] * 0.4)
+            )
+        )
+        sku_df['days_of_supply'] = dos.round(0).astype(int)
+        sku_df['stock_on_hand'] = np.maximum(5, (daily_sales * dos).round(0)).astype(int)
+        sku_df['inventory_age_days'] = sku_df['days_since_last_sale'] + (15 + (45 * sku_df['cost_seed'])).astype(int)
+        
+        sku_df.drop(columns=['cost_seed', 'temp_abc'], inplace=True)
         return sku_df
 
     def clean_reviews_data(self, df_reviews: pd.DataFrame) -> pd.DataFrame:
