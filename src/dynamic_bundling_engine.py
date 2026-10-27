@@ -205,6 +205,12 @@ class DynamicBundlingEngine:
         """
         Runs simulate_clearance_scenario for every candidate bundle, using the
         slow mover's modeled stock_on_hand as the units to clear.
+
+        Note on Shared-Stock Allocation:
+        When an anchor SKU is mined with multiple slow movers (e.g. an anchor
+        paired with several clearance items), each pair is evaluated as an
+        independent scenario. In a live warehouse deployment, anchor inventory
+        would be partitioned across bundles according to clearance priority.
         """
         if bundles_df.empty or sku_analytics_df.empty:
             return pd.DataFrame()
@@ -261,9 +267,42 @@ class DynamicBundlingEngine:
 
 if __name__ == "__main__":
     dbe = DynamicBundlingEngine()
-    out = dbe.optimize_bundle_pricing(
+    
+    # 1. Unit Test: Accretive per-unit pricing optimization (Price ratio <= 1.5)
+    out_acc = dbe.optimize_bundle_pricing(
+        anchor_sku="SKU-A", anchor_price=30.0, anchor_cost=15.0,
+        slow_sku="SKU-B", slow_price=40.0, slow_cost=20.0,
+        bundle_discount_pct=0.20
+    )
+    assert out_acc["combined_original_price"] == 70.0, "Original price mismatch"
+    assert out_acc["bundle_price"] == 56.0, "Bundle price mismatch"
+    assert out_acc["bundle_gross_margin"] == 21.0, "Bundle gross margin mismatch"
+    assert out_acc["margin_saved_vs_clearance"] == 6.0, "Margin saved mismatch"
+    assert out_acc["strategy_recommendation"] == "Approve Bundle", "Strategy recommendation mismatch"
+    print("Unit Test 1a (Accretive bundle pricing): PASSED")
+
+    # 1b. Unit Test: Dilutive per-unit pricing optimization (Price ratio > 1.5)
+    out_dil = dbe.optimize_bundle_pricing(
         anchor_sku="SKU-101", anchor_price=80.0, anchor_cost=35.0,
         slow_sku="SKU-909", slow_price=40.0, slow_cost=20.0,
         bundle_discount_pct=0.20
     )
-    print("Bundle Optimization Outcome:", out)
+    assert out_dil["margin_saved_vs_clearance"] == -4.0, "Margin saved mismatch"
+    assert out_dil["strategy_recommendation"] == "Review Pricing", "Strategy recommendation mismatch"
+    print("Unit Test 1b (Dilutive bundle pricing): PASSED")
+
+    # 2. Unit Test: Sell-through scenario simulation
+    scen = dbe.simulate_clearance_scenario(
+        anchor_price=80.0, anchor_cost=35.0,
+        slow_price=40.0, slow_cost=20.0,
+        slow_stock_units=100,
+        markdown_sell_through=0.60,
+        bundle_sell_through=0.80,
+        anchor_incremental_share=0.30,
+        bundle_discount_pct=0.20,
+        bundle_discount_scope="both",
+        window_days=45,
+    )
+    assert scen["bundle_wins"] is True, "Scenario bundle win mismatch"
+    assert scen["breakeven_bundle_sell_through"] is not None, "Breakeven should be defined"
+    print("Unit Test 2 (Clearance scenario & breakeven): PASSED")

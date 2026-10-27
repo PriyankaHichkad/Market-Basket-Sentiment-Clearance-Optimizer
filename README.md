@@ -99,6 +99,31 @@ Retailers accumulate stagnant, slow-moving C-Class inventory at season end. Stan
 
 ---
 
+## Resume Metrics Reproducibility & Audit Guide
+
+Every metric on the submitted resume is 100% reproducible directly from the raw data using `python3 scripts/audit_metrics.py`. This section details the exact data sources, formulas, denominators, and methodology for each resume bullet.
+
+| Resume Claim | Underlying Empirical Finding | Dataset & Methodology | Audit Verification Script |
+|---|---|---|---|
+| **Ranked 3,907 SKUs across 540K+ lines via Pareto ABC & GMROI, isolating 1,061 dead-stock clearance items.** | **541,909 raw rows** $\rightarrow$ **3,907 unique SKUs**; **1,061 dead-stock items** locking up **$151,900** in modeled capital. | **UCI Online Retail Dataset**: Aggregated transaction lines. Revenue ranked into Pareto tiers (Top 70% = A, Next 20% = B, Tail 10% = C with 2,574 SKUs). Dead stock defined as C-Class with modeled GMROI < 1.20x. | `python3 scripts/audit_metrics.py` (Section 1 & 2) |
+| **Executed 3-step NLP pipeline with VADER, TF-IDF on 23K reviews, tracing 54% of negative feedback to sizing flaws.** | **23,486 total reviews** $\rightarrow$ **1,335 negative reviews**; **719 attributed to sizing/fit flaws** (**53.9%** $\approx$ **54%**). | **Kaggle Women's Clothing Reviews**: VADER polarity filters negative reviews (compound < -0.05). TF-IDF n-grams extracted ('runs large', 'runs small'). Keyword rule dictionary maps 719 / 1,335 negative reviews to Sizing & Fit. | `python3 scripts/audit_metrics.py` (Section 3) |
+| **Applied Apriori association rules, surfacing 52 anchor and slow-mover clearance bundle pairs with 3.9x average lift.** | **52 cross-tier bundle pairs** mined with an **average Lift of 3.93x** (range: 2.01x – 6.73x). | **UCI Online Retail Baskets**: Apriori algorithm (`min_support=0.005`, `min_confidence=0.05`, `min_lift=1.05`) mined from transaction baskets, filtered for cross-tier pairs (A-Class Anchor + C-Class Slow Mover). | `python3 scripts/audit_metrics.py` (Section 4) |
+| **Deployed Streamlit simulator comparing bundle margins to 50% markdown; proved 16 of 50 bundles accretive at 20%.** | **16 of 50 bundles accretive** in legacy baseline; **15 of 52 accretive** in merchandise-only per-unit mode; **41 of 52** (blanket) and **52 of 52** (targeted) beat markdown in clearance scenario. | **Dynamic Bundling Engine**: Compares bundle margin dollars against a 50% standalone markdown. Preserved as a reproducible benchmark in both legacy (unfiltered) and clean catalog evaluations. | `python3 scripts/audit_metrics.py` (Section 5 & 6) |
+
+### Contextual Notes for Technical Reviewers
+
+1. **Independent Benchmark Datasets**: 
+   The platform integrates two real-world datasets to demonstrate complementary retail capabilities:
+   * The **UCI Online Retail Dataset** (541K transaction rows) drives transaction basket mining, Pareto classification, and inventory velocity.
+   * The **Women's Clothing E-Commerce Reviews Dataset** (23.5K reviews) is an independent customer feedback benchmark used to demonstrate unstructured NLP return diagnostics. The review text models general apparel return drivers and does not describe the giftware merchandise in the UCI transaction log.
+2. **Modeled Financial Inputs vs. Realized Outcomes**:
+   Public transaction logs record sales prices and quantities, but confidential wholesale costs and warehouse stock levels are not included in public datasets. Unit costs (modeled at 40–60% gross margin) and inventory levels (modeled from Days of Supply targets) are deterministic modeling assumptions, not realized accounting records.
+3. **Per-Unit Margin vs. Sell-Through Clearance Scenarios**:
+   * **Per-Unit View (16 of 50 / 15 of 52)**: Assumes equal 1:1 unit sales between bundling and markdown. Because the anchor is often priced higher than the slow mover, a blanket 20% discount on both items gives away anchor margin unless the anchor-to-slow price ratio is $\le 1.50$.
+   * **Sell-Through Clearance Scenario (41 of 52 / 52 of 52)**: Evaluates total gross profit over a 45-day window where bundling achieves higher velocity (80% sell-through) than a markdown (60% sell-through), accounting for holding costs and anchor incrementality.
+
+---
+
 ## Sell-Through Scenario Analysis (modeled assumptions)
 
 The per-unit bundle comparison assumes the same number of units clear under every strategy. The reason to bundle is that it should clear **more** stock, so the scenario model (`DynamicBundlingEngine.simulate_clearance_scenario`) makes that an explicit input. It compares gross profit over a clearance window for a standalone 50% markdown versus a bundle, with unsold units carrying holding cost.

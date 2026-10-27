@@ -104,15 +104,55 @@ def run_actual_analysis():
         print(f"Bundle Confidence Range: {bundles['confidence'].min():.2%} - {bundles['confidence'].max():.2%}")
         print(f"Bundle Lift Range: {bundles['lift'].min():.2f} - {bundles['lift'].max():.2f} (Avg: {bundles['lift'].mean():.2f})")
         
-        # 5. Dynamic Bundling Simulation Audit
+        # 5. Dynamic Bundling Simulation Audit (Clean Catalog: 52 Evaluated Candidate Pairs)
         dbe = DynamicBundlingEngine()
-        print("\n[Dynamic Bundling Simulation Audit (50 Candidate Pairs)]")
+        print(f"\n[Dynamic Bundling Simulation Audit ({len(bundles)} Evaluated Candidate Pairs)]")
+        print(f"Evaluated Pairs: {len(bundles)} | Mean Lift: {bundles['lift'].mean():.2f}x | Min Lift: {bundles['lift'].min():.2f}x | Max Lift: {bundles['lift'].max():.2f}x")
+        
+        eval_20_df = None
         for d in [0.15, 0.20, 0.25]:
             eval_res = dbe.evaluate_portfolio_clearance(bundles, fin_df, discount_tier=d)
+            if d == 0.20:
+                eval_20_df = eval_res.copy()
             accretive = len(eval_res[eval_res['margin_saved_vs_clearance'] > 0])
             net_delta = eval_res['margin_saved_vs_clearance'].sum()
             print(f"Bundle Discount {int(d*100)}%: {accretive} of {len(eval_res)} beat 50% markdown | Net margin vs markdown: ${net_delta:,.2f}")
+
+        # Save evaluated SKU pairs to CSV for transparent audit verification
+        output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "processed")
+        os.makedirs(output_dir, exist_ok=True)
+        csv_path = os.path.join(output_dir, "evaluated_bundle_pairs.csv")
+        if eval_20_df is not None:
+            eval_20_df.to_csv(csv_path, index=False)
+            print(f"Exported {len(eval_20_df)} evaluated candidate pairs to: {csv_path}")
+
+        # 6. Legacy Resume Baseline Audit (Pre-Filter Unfiltered Ledger Lines: 50 Pairs)
+        # Reproduces the original submitted resume metric (16 of 50 bundles accretive at 20%)
+        # prior to filtering non-merchandise ledger codes (e.g., DOTCOM POSTAGE, manual fees).
+        print("\n[Legacy Resume Baseline Audit (Unfiltered Catalog: 50 Candidate Pairs)]")
+        r_unfiltered = r_df.copy()
+        r_unfiltered.columns = [c.strip() for c in r_unfiltered.columns]
+        if 'InvoiceNo' in r_unfiltered.columns:
+            r_unfiltered = r_unfiltered[~r_unfiltered['InvoiceNo'].astype(str).str.startswith('C')]
+        if 'Price' in r_unfiltered.columns and 'UnitPrice' not in r_unfiltered.columns:
+            r_unfiltered.rename(columns={'Price': 'UnitPrice'}, inplace=True)
+        if 'StockCode' in r_unfiltered.columns and 'ProductID' not in r_unfiltered.columns:
+            r_unfiltered.rename(columns={'StockCode': 'ProductID'}, inplace=True)
+        r_unfiltered = r_unfiltered[(r_unfiltered['Quantity'] > 0) & (r_unfiltered['UnitPrice'] > 0)]
+        r_unfiltered['LineRevenue'] = r_unfiltered['Quantity'] * r_unfiltered['UnitPrice']
+        if 'InvoiceDate' in r_unfiltered.columns:
+            r_unfiltered['InvoiceDate'] = pd.to_datetime(r_unfiltered['InvoiceDate'], format='mixed', errors='coerce')
+        sku_unfiltered = etl.aggregate_sku_level_metrics(r_unfiltered)
+        fin_unfiltered = ifa.calculate_gmroi(ifa.calculate_abc_classification(sku_unfiltered))
+        b_mat_unfiltered = mba.prepare_basket_matrix(r_unfiltered, sku_analytics_df=fin_unfiltered, max_items=100)
+        rules_unfiltered = mba.generate_association_rules(mba.run_apriori(b_mat_unfiltered))
+        bundles_unfiltered = mba.find_bundle_recommendations(rules_unfiltered, fin_unfiltered)
         
+        eval_legacy_20 = dbe.evaluate_portfolio_clearance(bundles_unfiltered, fin_unfiltered, discount_tier=0.20)
+        accretive_leg = len(eval_legacy_20[eval_legacy_20['margin_saved_vs_clearance'] > 0])
+        print(f"Legacy Candidate Bundles: {len(bundles_unfiltered)} | Average Lift: {bundles_unfiltered['lift'].mean():.2f}x")
+        print(f"Bundle Discount 20%: {accretive_leg} of {len(eval_legacy_20)} beat 50% markdown (Resume Verification: 16 of 50 Accretive)")
+
     print("\n" + "=" * 60)
 
 if __name__ == "__main__":

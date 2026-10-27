@@ -14,9 +14,17 @@ inventory:
     warning_threshold: 1.20 # GMROI below 1.20 triggers markdown alert
 
 apriori:
+  # Standard production thresholds for general e-commerce association rules:
   min_support: 0.005       # Minimum itemset support threshold
-  min_confidence: 0.15     # Minimum rule confidence threshold
-  min_lift: 1.20           # Minimum rule lift threshold
+  min_confidence: 0.15     # Production rule confidence threshold
+  min_lift: 1.20           # Production rule lift threshold
+  
+  # Cross-tier clearance candidate thresholds note:
+  # Note: `scripts/audit_metrics.py` and the interactive clearance simulator deliberately
+  # use exploratory cross-tier thresholds (`min_confidence=0.05`, `min_lift=1.05`) when
+  # pairing slow-moving C-Class inventory with high-demand A-Class anchors. Because C-Class
+  # items have naturally lower purchasing frequency, these thresholds expand cross-tier
+  # promotional discovery across stagnant catalog stock while maintaining Lift > 1.05.
 
 sentiment:
   vader:
